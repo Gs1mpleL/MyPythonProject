@@ -1,13 +1,11 @@
-import sys
 import os
+import sys
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 import time
-import requests
 
-requests.get("http://www.baidu.com")
 import schedule
 
 from daily_email.daily_job_starter import total_job_run
