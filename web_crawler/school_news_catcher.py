@@ -1,17 +1,66 @@
-import sys
-import os
-
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
-
-from my_utils import email_sender
-from my_utils.base_utils import get_local_time
-
 import time
 
 import requests as req
 import re
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.header import Header
+
+smtp_ssl = "smtp.qq.com"
+smtp_ssl_port = 465
+my_email = "804121985@qq.com"
+my_email_authentication_code = "mwlopuckbuhebdbh"
+
+
+def generate_html(text):
+    html_string_head = '''
+    <html>
+      <head><title>HTML Pandas Dataframe with CSS</title></head>
+      <link rel="stylesheet" type="text/css" href="df_style.css"/>
+                 '''
+
+    html_string_tail = '''
+      </body>
+    </html>
+    '''
+
+    return html_string_head + text + html_string_tail
+
+
+# 邮件发送模块
+def sendemail(title, text):
+    # 1. 连接邮箱服务器
+    con = smtplib.SMTP_SSL(smtp_ssl, smtp_ssl_port)
+    # 2. 登录邮箱
+    con.login(my_email, my_email_authentication_code)
+    # 2. 准备数据
+    # 创建邮件对象
+    msg = MIMEMultipart()
+    # 设置邮件主题
+    subject = Header(title, 'utf-8').encode()
+    msg['Subject'] = subject
+    # 设置邮件发送者
+    msg['From'] = '804121985@qq.com'
+    # 设置邮件接受者
+    msg['To'] = 'lzh_tuisong@qq.com'
+    # 添加⽂文字内容
+    text = MIMEText(generate_html(text), 'html', 'utf-8')
+    msg.attach(text)
+    # 3.发送邮件
+    con.sendmail('804121985@qq.com', 'lzh_tuisong@qq.com', msg.as_string())
+    con.quit()
+
+
+def get_local_time():
+    import time
+    # 获取当前时间
+    current_time = int(time.time())
+    # 转换为localtime
+    localtime = time.localtime(current_time)
+    # 利用strftime()函数重新格式化时间
+    return time.strftime('%Y-%m-%d %H:%M:%S', localtime)
 
 
 # 提取html格式类似 <href="xxx" xxx>xxxx</xx> 这样的信息，返回超链接和文本信息
@@ -61,7 +110,7 @@ def scanner_run():
             if need_to_send != '':
                 original_list = new_list
                 print(need_to_send)
-                email_sender.sendemail("院校公告更新", need_to_send)
+                sendemail("院校公告更新", need_to_send)
             time.sleep(300)
         except:
             print("爬虫运行出错,重启中....")
