@@ -23,7 +23,7 @@ my_email_authentication_code = "不给"
 # 自动签到模块
 class AutoSign:
     def __init__(self):
-        self.log = ''
+        self.log_to_msg = ''
         self.firsttime = True
         self.awardsurl = 'https://api-takumi.mihoyo.com/event/bbs_sign_reward/home?act_id=e202009291139501'
         self.roleurl = 'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie?game_biz=hk4e_cn'
@@ -41,8 +41,6 @@ class AutoSign:
         # with open("runlog", "a+") as f:
         #     f.write(msg + "\n")
         #     f.close()
-        self.log += msg
-        self.log += "\t"
 
     def SignInThread(self):
         ## 没必要循环，改成crontab
@@ -52,23 +50,23 @@ class AutoSign:
         #         self.firsttime = False
 
         self.Init()
-        return self.log
+        return self.log_to_msg
 
     def Init(self):
         self.conifg = self.getConfig()
         self.roles = []
         date = datetime.datetime.now()
-        # self.WriteLog(f"[INFO]今天是{date.year}.{date.month}.{date.day}")
-        # self.WriteLog(f"[INFO]导入了{len(self.conifg.cookies)}个Cookies")
+        self.WriteLog(f"[INFO]今天是{date.year}.{date.month}.{date.day}")
+        self.WriteLog(f"[INFO]导入了{len(self.conifg.cookies)}个Cookies")
         for cookies in self.conifg.cookies:
             roles = self.getRoles(cookies)
             if roles:
                 self.roles.append(roles)
             else:
                 self.WriteLog("[Error]失效Cookies" + json.dumps(cookies))
-        # self.WriteLog("[INFO]获取角色成功!")
+        self.WriteLog("[INFO]获取角色成功!")
         if len(self.roles) == 0:
-            # self.WriteLog("[Error]没有找到任何角色!")
+            self.WriteLog("[Error]没有找到任何角色!")
             exit()
         self.infolist = []
         for i in self.roles:
@@ -77,6 +75,7 @@ class AutoSign:
                 res = requests.get(url, headers=self.headers, verify=False, cookies=role["cookies"]).json()
                 if res["retcode"] != 0:
                     self.WriteLog(f"[Error]获取签到信息失败.错误信息:{res['message']}")
+                    self.log_to_msg = f"[Error]获取签到信息失败.错误信息:{res['message']}"
                 res['uid'] = role["game_uid"]
                 res['cookies'] = role['cookies']
                 res['region'] = role['region']
@@ -103,17 +102,22 @@ class AutoSign:
             total_sign_day += 1
             awards = self.getawards(info["cookies"])
             awards = awards["data"]["awards"]
-            # self.WriteLog(f"[INFO]为UID:{info['uid']}签到中...")
+            self.WriteLog(f"[INFO]为UID:{info['uid']}签到中...")
             if info['data']['is_sign'] is True:
                 self.WriteLog(F"[Waring]UID:{info['uid']}.您今日已经签到过了")
+                self.log_to_msg = F"[Waring]UID:{info['uid']}.您今日已经签到过了"
                 pass
             elif info['data']['first_bind'] is True:
                 self.WriteLog(F"[Warning]UID:{info['uid']}请先去米游社签到一次!")
+                self.log_to_msg = F"[Warning]UID:{info['uid']}请先去米游社签到一次!"
+
                 pass
             else:
                 awardname = awards[total_sign_day]['name']
                 cnt = awards[total_sign_day]['cnt']
                 self.WriteLog(f"[INFO]UID:{info['uid']}今日的奖励是{cnt}{awardname}")
+                self.log_to_msg = f"[INFO]UID:{info['uid']}今日的奖励是{cnt}{awardname}"
+
                 headers = {
                     'DS': self.get_ds(),
                     'Origin': 'https://webstatic.mihoyo.com',
@@ -137,8 +141,10 @@ class AutoSign:
                                     verify=False).json()
                 if res["retcode"] != 0:
                     self.WriteLog(f"[Error]UID:{info['uid']}签到失败.错误信息:{res['message']}")
+                    self.log_to_msg = f"[Error]UID:{info['uid']}签到失败.错误信息:{res['message']}"
                 else:
                     self.WriteLog(f"[INFO]UID:{info['uid']}签到成功!")
+                    self.log_to_msg = f"[INFO]UID:{info['uid']}签到成功!"
 
     def getawards(self, cookies):
         res = requests.get(self.awardsurl, headers=self.headers, cookies=cookies, verify=False).json()
@@ -342,7 +348,7 @@ def hot_news_job():
 def yuanshen_AutoSign_job():
     disable_warnings()
     sign = AutoSign()
-    info = sign.log
+    info = sign.log_to_msg
     return "<h1>" + "原神签到:</h1><a>" + info + "</a>"
 
 
