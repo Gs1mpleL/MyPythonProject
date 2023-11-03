@@ -35,19 +35,14 @@ class AutoSign:
         self.signurl = 'https://api-takumi.mihoyo.com/event/bbs_sign_reward/sign'
         self.SignInThread()
 
-    def md5(data):
-        md5 = hashlib.md5()
-        md5.update(data.encode())
-        return md5.hexdigest()
-
     def WriteLog(self, msg):
-        # print(msg)
+        print(msg)
         # 不写入log
         # with open("runlog", "a+") as f:
         #     f.write(msg + "\n")
         #     f.close()
         self.log += msg
-        self.log += "</br>"
+        self.log += "\t"
 
     def SignInThread(self):
         ## 没必要循环，改成crontab
@@ -73,7 +68,7 @@ class AutoSign:
                 self.WriteLog("[Error]失效Cookies" + json.dumps(cookies))
         # self.WriteLog("[INFO]获取角色成功!")
         if len(self.roles) == 0:
-            self.WriteLog("[Error]没有找到任何角色!")
+            # self.WriteLog("[Error]没有找到任何角色!")
             exit()
         self.infolist = []
         for i in self.roles:
@@ -93,7 +88,13 @@ class AutoSign:
         n = '9nQiU3AV0rJSIBWgdynfoGMGKaklfbM7'
         i = str(int(time.time()))
         r = ''.join(random.sample(string.ascii_lowercase + string.digits, 6))
-        c = hashlib.md5.md5('salt=' + n + '&t=' + i + '&r=' + r)
+
+        def md5(data):
+            md5 = hashlib.md5()
+            md5.update(data.encode())
+            return md5.hexdigest()
+
+        c = md5('salt=' + n + '&t=' + i + '&r=' + r)
         return f'{i},{r},{c}'
 
     def SignIn(self, infolist):
@@ -339,13 +340,10 @@ def hot_news_job():
 
 
 def yuanshen_AutoSign_job():
-    try:
-        disable_warnings()
-        sign = AutoSign()
-        info = sign.log
-        return "<h1>" + "原神签到:</h1><a>" + info + "</a>"
-    except:
-        return "yuanshen_AutoSign_job_error"
+    disable_warnings()
+    sign = AutoSign()
+    info = sign.log
+    return "<h1>" + "原神签到:</h1><a>" + info + "</a>"
 
 
 def remain_days_job():
