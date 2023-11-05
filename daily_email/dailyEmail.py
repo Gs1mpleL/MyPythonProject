@@ -61,6 +61,7 @@ class AutoSign:
         for cookies in self.conifg.cookies:
             roles = self.getRoles(cookies)
             if roles:
+                print(roles)
                 self.roles.append(roles)
             else:
                 self.WriteLog("[Error]失效Cookies" + json.dumps(cookies))
@@ -99,7 +100,6 @@ class AutoSign:
     def SignIn(self, infolist):
         for info in infolist:
             total_sign_day = info['data']['total_sign_day']
-            total_sign_day += 1
             awards = self.getawards(info["cookies"])
             awards = awards["data"]["awards"]
             self.WriteLog(f"[INFO]为UID:{info['uid']}签到中...")
@@ -141,10 +141,10 @@ class AutoSign:
                                     verify=False).json()
                 if res["retcode"] != 0:
                     self.WriteLog(f"[Error]UID:{info['uid']}签到失败.错误信息:{res['message']}")
-                    self.log_to_msg = f"[Error]UID:{info['uid']}签到失败.错误信息:{res['message']}"
+                    self.log_to_msg += f"</br>[Error]UID:{info['uid']}签到失败.错误信息:{res['message']}"
                 else:
                     self.WriteLog(f"[INFO]UID:{info['uid']}签到成功!")
-                    self.log_to_msg = f"[INFO]UID:{info['uid']}签到成功!"
+                    self.log_to_msg += f"</br>[INFO]UID:{info['uid']}签到成功!"
 
     def getawards(self, cookies):
         res = requests.get(self.awardsurl, headers=self.headers, cookies=cookies, verify=False).json()
@@ -349,7 +349,7 @@ def yuanshen_AutoSign_job():
     disable_warnings()
     sign = AutoSign()
     info = sign.log_to_msg
-    return "<h1>" + "原神签到:</h1><a>" + info + "</a>"
+    return "<h1>" + "原神签到:</h1>" + info
 
 
 def remain_days_job():
@@ -369,6 +369,7 @@ def parse_total_msg():
     weather_job_msg = weather_job()
     remain_days_job_msg = remain_days_job()
     yuanshen_AutoSign_job_msg = yuanshen_AutoSign_job()
+    print(weather_job_msg + hot_news_job_msg + yuanshen_AutoSign_job_msg + remain_days_job_msg)
     return weather_job_msg + hot_news_job_msg + yuanshen_AutoSign_job_msg + remain_days_job_msg
 
 
